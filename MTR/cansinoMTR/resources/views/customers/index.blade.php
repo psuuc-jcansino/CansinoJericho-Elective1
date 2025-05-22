@@ -16,6 +16,18 @@
     </div>
     @endif
 
+    <!-- Search and Filter Section -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <!-- Search Bar -->
+        <input type="text" id="search-bar" class="form-control me-2" placeholder="Search by name..." style="max-width: 700px;" oninput="filterResults()" value="{{ request('search') }}" />
+
+        <!-- Filter Dropdown -->
+        <select id="filter-dropdown" class="form-select ms-2" style="max-width: 200px;" onchange="filterResults()">
+            <option value="name" {{ request('sort_by') == 'name' ? 'selected' : '' }}>Sort by Name (A-Z)</option>
+            <option value="created_at" {{ request('sort_by') == 'created_at' ? 'selected' : '' }}>Sort by Date</option>
+        </select>
+    </div>
+
     @if($customers->isEmpty())
     <p class="text-center text-muted">No customers found.</p>
     @else
@@ -50,6 +62,19 @@
         </div>
         @endforeach
     </div>
+
+    <!-- Centered Showing results message -->
+    <div class="text-center my-3">
+        <p class="text-muted mb-2">
+            Showing results {{ $customers->firstItem() }} to {{ $customers->lastItem() }} of {{ $customers->total() }}
+        </p>
+    </div>
+
+    <!-- Pagination Links -->
+    <div class="d-flex justify-content-center">
+        {{ $customers->appends(request()->query())->links('pagination::bootstrap-4') }}
+    </div>
+
     @endif
 </div>
 
@@ -57,6 +82,26 @@
 <script>
     function confirmDelete() {
         return window.confirm('Are you sure you want to delete this customer?');
+    }
+
+    // JavaScript for Search and Filter
+    function filterResults() {
+        let searchTerm = document.getElementById('search-bar').value;
+        let sortBy = document.getElementById('filter-dropdown').value;
+
+        let url = new URL(window.location.href);
+        let params = new URLSearchParams(url.search);
+
+        if (searchTerm) {
+            params.set('search', searchTerm);
+        } else {
+            params.delete('search');
+        }
+
+        params.set('sort_by', sortBy);
+
+        url.search = params.toString();
+        window.location.href = url.toString();
     }
 </script>
 @endsection

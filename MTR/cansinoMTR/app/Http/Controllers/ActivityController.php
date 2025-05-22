@@ -8,12 +8,38 @@ use Illuminate\Http\Request;
 
 class ActivityController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $activities = Activity::with('customer')->get();
+        $activities = Activity::query()
+            ->with('customer')
+            ->when($request->search, function ($query) use ($request) {
+                $query->whereHas('customer', function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->search . '%');
+                });
+            })
+            ->when($request->sort, function ($query) use ($request) {
+                if ($request->sort === 'customer_name') {
+                    $query->orderBy(
+                        Customer::select('name')
+                            ->whereColumn('id', 'activities.customer_id')
+                    );
+                } elseif ($request->sort === 'date') {
+                    $query->orderBy('date', 'desc');
+                }
+            })
+            ->when($request->type, function ($query) use ($request) {
+                $query->where('type', $request->type);
+            });
+
+        // Apply default sort if no sort is selected
+        if (!$request->has('sort')) {
+            $activities->orderBy('date', 'desc');
+        }
+
+        $activities = $activities->paginate(10);
+
         return view('activities.index', compact('activities'));
     }
-
     public function create()
     {
         $customers = Customer::all();

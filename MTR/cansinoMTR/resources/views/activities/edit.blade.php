@@ -54,7 +54,7 @@
 
                 <div class="mb-3">
                     <label class="form-label fw-bold">Date</label>
-                    <input type="date" name="date" class="form-control" value="{{ $activity->date }}" required>
+                    <input type="date" name="date" class="form-control" value="{{ old('date', $activity->date) }}" required min="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
                 </div>
 
                 <div class="d-grid gap-2">

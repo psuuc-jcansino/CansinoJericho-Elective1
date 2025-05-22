@@ -7,11 +7,28 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::all();
+        $query = Customer::query();
+
+        // Search by name
+        if ($request->has('search') && $request->search != '') {
+            $query->where('name', 'like', '%' . $request->search . '%');
+        }
+
+        // Sort by name or date (use default sort: created_at desc if none)
+        if ($request->has('sort_by') && in_array($request->sort_by, ['name', 'created_at'])) {
+            $query->orderBy($request->sort_by, 'asc');
+        } else {
+            // Default: newest first
+            $query->orderBy('created_at', 'desc');
+        }
+
+        $customers = $query->paginate(9);
+
         return view('customers.index', compact('customers'));
     }
+
 
     public function create()
     {
